@@ -19,6 +19,8 @@ Pacman agents (in searchAgents.py).
 
 import util
 from util import Stack
+from util import Queue
+from util import PriorityQueue
 
 class SearchProblem:
     """
@@ -91,9 +93,9 @@ def depthFirstSearch(problem: SearchProblem):
     stack = Stack()
     visited = set()
 
-    # First node
+    # First state
     start= problem.getStartState()
-    stack.push((start, []))
+    stack.push((start, [])) # state, path (firts node doesn't have a path)
 
     while not stack.isEmpty():
         state, path = stack.pop()
@@ -101,22 +103,67 @@ def depthFirstSearch(problem: SearchProblem):
         if problem.isGoalState(state):
             return path
         
+        # if visited, don't visit again
         if state not in visited:
             visited.add(state)
 
-            for successor, action, cost in problem.getSuccessors(state):
+            for successor, action, __ in problem.getSuccessors(state):
                 stack.push((successor, path + [action]))
 
     util.raiseNotDefined()
 
 def breadthFirstSearch(problem: SearchProblem):
     """Search the shallowest nodes in the search tree first."""
-    "*** YOUR CODE HERE ***"
+    queue = Queue()
+    visited = set()
+
+    #First state
+    start = problem.getStartState()
+    queue.push((start, [])) # state, path (firts node doesn't have a path)
+
+    while not queue.isEmpty():
+        state, path = queue.pop()
+
+        if problem.isGoalState(state):
+            return path
+        
+        # if visited, don't visit again
+        if state not in visited:
+            visited.add(state)
+
+            for successor, action, __ in problem.getSuccessors(state):
+                queue.push((successor, path + [action]))
+
     util.raiseNotDefined()
 
 def uniformCostSearch(problem: SearchProblem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
+    priorityQueue = PriorityQueue()
+    visited = {} # lowest cost in this state
+
+    # First state
+    start = problem.getStartState()
+    priorityQueue.push((start, [], 0), 0) # node and priority
+    visited[start] = 0
+
+    while not priorityQueue.isEmpty():
+        state, path, current_cost = priorityQueue.pop()
+
+        if problem.isGoalState(state):
+            return path
+        
+        # ignore worst path
+        if current_cost > visited[state]:
+            continue
+        
+        for successor, action, cost in problem.getSuccessors(state):
+            total_cost = current_cost + cost
+            
+            # new node or best cost
+            if successor not in visited or total_cost < visited[successor]:
+                visited[successor] = total_cost # best cost
+                priorityQueue.push((successor, path + [action], total_cost), total_cost)
+
     util.raiseNotDefined()
 
 def nullHeuristic(state, problem=None):
