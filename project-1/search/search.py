@@ -143,7 +143,7 @@ def uniformCostSearch(problem: SearchProblem):
 
     # First state
     start = problem.getStartState()
-    priorityQueue.push((start, [], 0), 0) # node and priority
+    priorityQueue.push((start, [], 0), 0) # node (state, direction, cost) and priority
     visited[start] = 0
 
     while not priorityQueue.isEmpty():
@@ -175,7 +175,33 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem: SearchProblem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
+    priorityQueue = PriorityQueue()
+    visited = {}
+
+    start = problem.getStartState()
+    priorityQueue.push((start, [], 0), heuristic(start, problem)) # (start, [], 0) -> state, direction, g(n) cost | heuristic from the start
+    visited[start] = 0
+
+    while not priorityQueue.isEmpty():
+        state, path, current_cost = priorityQueue.pop()
+        
+        if problem.isGoalState(state):
+            return path
+
+        # ignore worst real path
+        if current_cost > visited[state]:
+            continue
+
+        for successor, action, cost in problem.getSuccessors(state):
+            UCS_cost = current_cost + cost # g(n)
+
+            # new node or best cost
+            if successor not in visited or UCS_cost < visited[successor]:
+                visited[successor] = UCS_cost # best real cost
+                estimated_total_cost = UCS_cost + heuristic(successor, problem) # f(n) = g(n)+h(n)
+                priorityQueue.push((successor, path + [action], UCS_cost), estimated_total_cost) # priority is related to the total estimated cost
+
+        
     util.raiseNotDefined()
 
 
