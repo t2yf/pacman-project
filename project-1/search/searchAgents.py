@@ -350,9 +350,30 @@ class CornersProblem(search.SearchProblem):
             x, y = int(x + dx), int(y + dy)
             if self.walls[x][y]: return 999999
         return len(actions)
+    
+# def cornersHeuristic(state, problem):
 
+#     corners = problem.corners
+#     position, visited = state
 
-def cornersHeuristic(state: Any, problem: CornersProblem):
+#     remaining = []
+
+#     for i, corner in enumerate(corners):
+#         if not visited[i]:
+#             remaining.append(corner)
+
+#     if not remaining:
+#         return 0
+
+#     distances = []
+
+#     for corner in remaining:
+#         dist = abs(position[0] - corner[0]) + abs(position[1] - corner[1])
+#         distances.append(dist)
+
+#     return max(distances)
+
+def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
 
@@ -366,10 +387,38 @@ def cornersHeuristic(state: Any, problem: CornersProblem):
     admissible (as well as consistent).
     """
     corners = problem.corners # These are the corner coordinates
+    # not used because I think on the relaxed problem
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    # idea: from the actual state I calculate the heuristic of the nearest corner A and then  calculate the heuristic of the nearest corner B to corner A
+    position, visitedCorners = state
+
+    # corners non visited
+    nonVisited = []
+
+    for i, corner in enumerate(corners):
+        if not visitedCorners[i]:
+            nonVisited.append(corner)
+
+    heuristic = 0
+
+    while nonVisited:
+        distances = []
+        for corner in nonVisited:
+            #manhattan heuristic
+            dist = abs(position[0] - corner[0]) + abs(position[1] - corner[1])
+            distances.append((dist, corner))
+
+        # minimum distance and nearest corner
+        dist, nearest = min(distances)
+
+        # sum of all path os nearest corners
+        heuristic += dist
+
+        position = nearest
+        nonVisited.remove(nearest)
+
+    return heuristic 
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
