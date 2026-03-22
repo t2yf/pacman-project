@@ -171,7 +171,50 @@ class MinimaxAgent(MultiAgentSearchAgent):
         gameState.isLose():
         Returns whether or not the game state is a losing state
         """
-        "*** YOUR CODE HERE ***"
+        def minimax(gameState: GameState, depth, agentIndex):
+            # se chegou ao fim, ou na profundidade máxima retornar a utilidade do estado
+            if depth == self.depth or gameState.isWin() or gameState.isLose():
+                return self.evaluationFunction(gameState)
+            
+            # se não tem mais ações
+            if len(gameState.getLegalActions(agentIndex)) == 0:
+                    return self.evaluationFunction(gameState)
+            
+            #pacman -> max
+            if agentIndex == 0:
+                v = -float('inf')
+                for action in gameState.getLegalActions(agentIndex):
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v = max(v, minimax(successor, depth, 1))
+                return v
+            
+            # fantasminhas -> min
+            else:
+                v = float('inf')
+                nextAgent = agentIndex +1
+                #se acabar os fantasmas passa para o pacman, profundidade aumenta porque todo mundo já jogou
+                if nextAgent == gameState.getNumAgents():
+                    nextAgent = 0
+                    depth +=1
+                for action in gameState.getLegalActions(agentIndex):
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v = min(v, minimax(successor, depth, nextAgent))
+                return v
+        
+        bestValue = -float('inf')
+        bestAction = None
+
+        #acoes do pacman
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action) # pacman ja jogou
+            v = minimax(successor, 0, 1)
+
+            if v > bestValue:
+                bestValue = v
+                bestAction = action
+
+        return bestAction
+    
         util.raiseNotDefined()
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -183,7 +226,61 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        "*** YOUR CODE HERE ***"
+        def alphaBetaPruning(gameState: GameState, depth, alpha, beta, agentIndex):
+             # se chegou ao fim retornar a utilidade do estado
+            if depth == self.depth or gameState.isWin() or gameState.isLose():
+                return self.evaluationFunction(gameState)
+            
+            # se não tem mais ações
+            if len(gameState.getLegalActions(agentIndex)) == 0:
+                    return self.evaluationFunction(gameState)
+            if agentIndex == 0:
+                v = -float('inf')
+                for action in gameState.getLegalActions(agentIndex):
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v = max(v, alphaBetaPruning(successor, depth, alpha, beta, 1))
+                    if v > beta:
+                        return v
+                    else:
+                        alpha = max(alpha, v)
+                return v
+            else:
+                v = float('inf')
+                nextAgent = agentIndex +1
+
+                #se acabar os fantasmas passa para o pacman, profundidade aumenta porque todo mundo já jogou
+                if nextAgent == gameState.getNumAgents():
+                    nextAgent = 0
+                    depth +=1
+
+                for action in gameState.getLegalActions(agentIndex):
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v = min(v, alphaBetaPruning(successor, depth, alpha, beta, nextAgent))
+                    if v < alpha:
+                        return v 
+                    else:
+                        beta = min(beta, v)
+                return v 
+        
+        alpha = -float('inf')
+        beta = float('inf')
+
+        bestValue = -float('inf')
+        bestAction = None
+
+        #acoes do pacman
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action) # pacman ja jogou
+            v = alphaBetaPruning(successor, 0, alpha, beta, 1)
+
+            if v > bestValue:
+                bestValue = v
+                bestAction = action
+
+            alpha = max(alpha, bestValue)
+
+        return bestAction
+
         util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
