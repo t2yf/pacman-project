@@ -295,7 +295,50 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
+        def expectimax(gameState: GameState, depth, agentIndex):
+            # se chegou ao fim retornar a utilidade do estado
+            if depth == self.depth or gameState.isWin() or gameState.isLose():
+                return self.evaluationFunction(gameState)
+            
+            # se não tem mais ações
+            if len(gameState.getLegalActions(agentIndex)) == 0:
+                    return self.evaluationFunction(gameState)
+            
+            if agentIndex == 0:
+                v = -float('inf')
+                for action in gameState.getLegalActions(agentIndex):
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v = max(v, expectimax(successor, depth, 1))
+                return v
+            else:
+                v = 0
+                nextAgent = agentIndex +1
+                #se acabar os fantasmas passa para o pacman, profundidade aumenta porque todo mundo já jogou
+                if nextAgent == gameState.getNumAgents():
+                    nextAgent = 0
+                    depth +=1
+
+                actions = gameState.getLegalActions(agentIndex)
+                probability = 1.0/ len(actions) # cada ação tem mesma prob de acontecer
+
+                for action in actions:
+                    successor = gameState.generateSuccessor(agentIndex, action)
+                    v += probability * expectimax(successor, depth, nextAgent)
+                return v
+
+        bestValue = -float('inf')
+        bestAction = None
+
+        #acoes do pacman
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action) # pacman ja jogou
+            v = expectimax(successor, 0, 1)
+
+            if v > bestValue:
+                bestValue = v
+                bestAction = action
+
+        return bestAction
         util.raiseNotDefined()
 
 def betterEvaluationFunction(currentGameState: GameState):
@@ -303,9 +346,50 @@ def betterEvaluationFunction(currentGameState: GameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: 
+    Se o pacman já ganhou ou perdeu, não tem o que calcular. Se ele ficar parado, penalizar com o restante das comidas. Fazer ele ir até as comidas mais próximas, mas ao mesmo tempo fugir do fantasma, principalmente se ele está muito perto (alta penalidade), caso contrário apenas se afastar (sem muita penalidade), ou caçá-lo (se comer bolinha)
     """
-    "*** YOUR CODE HERE ***"
+    # considerar comida e fantasminhas
+
+    pacmanPos = currentGameState.getPacmanPosition()
+    ghostStates = currentGameState.getGhostStates()
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
+    foodList = currentGameState.getFood().asList()
+
+    if currentGameState.isWin():
+            return 99999
+        
+    if currentGameState.isLose():
+            return -99999
+    
+    score = currentGameState.getScore()
+
+    # penaliza ficar parado, quanto mais comida sobrar pior
+    score -= 4 * len(foodList)
+
+    # distancia da comida mais perta
+    dist = float('inf')
+    if len(foodList) > 0:
+        for food in foodList:
+            manDist = manhattanDistance(pacmanPos, food)
+            if manDist < dist:
+                dist = manDist 
+        score += 30 / (dist + 1)
+    
+    # distancia dos fantasmas
+    dist = 0
+    for i, ghost in enumerate(ghostStates):
+        ghostPos = ghost.getPosition()
+        dist = manhattanDistance(ghostPos, pacmanPos)
+        #fantasma vulneravel > avançar
+        if scaredTimes[i] > 0:
+            score += 40 / (dist + 1)
+        else:
+            #fantasma perto
+            if dist < 2:
+                score -= 200 # sair logo
+            score -= 10/ (dist + 1)
+    return score
     util.raiseNotDefined()
 
 # Abbreviation
