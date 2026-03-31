@@ -21,7 +21,7 @@
 
 def question2():
     answerDiscount = 0.9
-    answerNoise = 0.2
+    answerNoise = 0.0 #confiar cegamente que dá para atravessar a ponte
     return answerDiscount, answerNoise
 
 def question3a():
