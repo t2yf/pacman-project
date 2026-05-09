@@ -58,7 +58,31 @@ def train_regression(model, dataset):
         dataset: a PyTorch dataset object containing data to be trained on
         
     """
-    "*** YOUR CODE HERE ***"
+    epochs = 100
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+    dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+
+    for epoch in range(epochs):
+        total_loss = 0.0
+        for batch in dataloader:
+            x = batch['x']
+            y = batch['label']
+
+            optimizer.zero_grad()
+            y_pred = model(x)
+
+            loss = regression_loss(y_pred, y)
+            loss.backward()
+
+            optimizer.step()
+
+            total_loss += loss.item()
+        avg_loss = total_loss / len(dataloader)
+        #early stopping se loss chegar a esse valor
+        if avg_loss < 0.02:
+            break
+    
 
 
 def train_digitclassifier(model, dataset):
