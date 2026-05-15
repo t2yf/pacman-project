@@ -90,9 +90,10 @@ class RegressionModel(Module):
     def __init__(self):
         # Initialize your model parameters here
         super().__init__()
-        self.layer1 = Linear(1, 64)
-        self.layer2 = Linear(64, 64)    
-        self.layer3 = Linear(64, 1)
+        self.layer1 = Linear(1, 128)
+        self.layer2 = Linear(128, 128)
+        self.layer3 = Linear(128, 128)
+        self.layer4 = Linear(128, 1)
    
 
     def forward(self, x):
@@ -106,8 +107,9 @@ class RegressionModel(Module):
         """
         x = relu(self.layer1(x))
         x = relu(self.layer2(x))
-        x = self.layer3(x)
-        return x
+        x = relu(self.layer3(x))
+
+        return self.layer4(x)
 
 
 class DigitClassificationModel(Module):
@@ -130,8 +132,9 @@ class DigitClassificationModel(Module):
         super().__init__()
         input_size = 28 * 28
         output_size = 10
-        "*** YOUR CODE HERE ***"
-
+        self.layer1 = Linear(input_size, 256)
+        self.layer2 = Linear(256, 64)
+        self.output = Linear(64, output_size)
 
     def forward(self, x):
         """
@@ -147,7 +150,10 @@ class DigitClassificationModel(Module):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
-        """ YOUR CODE HERE """
+        x = relu(self.layer1(x))
+        x = relu(self.layer2(x))
+        x = self.output(x)
+        return x
 
 
 

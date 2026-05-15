@@ -58,8 +58,8 @@ def train_regression(model, dataset):
         dataset: a PyTorch dataset object containing data to be trained on
         
     """
-    epochs = 100
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    epochs = 300
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
 
@@ -70,9 +70,9 @@ def train_regression(model, dataset):
             y = batch['label']
 
             optimizer.zero_grad()
-            y_pred = model(x)
+            pred = model(x)
 
-            loss = regression_loss(y_pred, y)
+            loss = regression_loss(pred, y)
             loss.backward()
 
             optimizer.step()
@@ -80,7 +80,7 @@ def train_regression(model, dataset):
             total_loss += loss.item()
         avg_loss = total_loss / len(dataloader)
         #early stopping se loss chegar a esse valor
-        if avg_loss < 0.02:
+        if avg_loss < 0.01:
             break
     
 
@@ -90,7 +90,26 @@ def train_digitclassifier(model, dataset):
     Trains the model.
     """
     model.train()
-    """ YOUR CODE HERE """
+    epochs = 30
+    dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+
+    for epoch in range(epochs):
+        for batch in dataloader:
+            x = batch['x']
+            y = batch['label']
+
+            optimizer.zero_grad()
+            pred = model(x)
+
+            loss = digitclassifier_loss(pred, y)
+            loss.backward()
+
+            optimizer.step()
+        
+        if dataset.get_validation_accuracy() > 0.98:
+            break
+
 
 
 def train_languageid(model, dataset):
