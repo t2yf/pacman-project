@@ -44,7 +44,8 @@ def languageid_loss(y_pred, y):
         y: a node with shape (batch_size x 5)
     Returns: a loss node
     """
-    "*** YOUR CODE HERE ***"
+    labels = y.argmax(dim=1)
+    return cross_entropy(y_pred, labels)
 
 
 def digitconvolution_Loss(y_pred, y):
@@ -60,5 +61,6 @@ def digitconvolution_Loss(y_pred, y):
         y: a node with shape (batch_size x 10)
     Returns: a loss tensor
     """
-    """ YOUR CODE HERE """
+    labels = y.argmax(dim=1)
+    return cross_entropy(y_pred, labels)
     

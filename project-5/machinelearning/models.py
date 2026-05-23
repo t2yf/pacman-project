@@ -12,6 +12,7 @@ from torch.nn import Parameter, Linear
 from torch import tensor, tensordot, ones, matmul, zeros 
 from torch.nn.functional import relu, softmax
 from torch import movedim
+from math import sqrt
 
 """
 ##################
@@ -90,10 +91,10 @@ class RegressionModel(Module):
     def __init__(self):
         # Initialize your model parameters here
         super().__init__()
-        self.layer1 = Linear(1, 128)
-        self.layer2 = Linear(128, 128)
-        self.layer3 = Linear(128, 128)
-        self.layer4 = Linear(128, 1)
+        self.input = Linear(1, 128)
+        self.hidden1 = Linear(128, 128)
+        self.hidden2 = Linear(128, 128)
+        self.output = Linear(128, 1)
    
 
     def forward(self, x):
@@ -105,11 +106,11 @@ class RegressionModel(Module):
         Returns:
             A node with shape (batch_size x 1) containing predicted y-values
         """
-        x = relu(self.layer1(x))
-        x = relu(self.layer2(x))
-        x = relu(self.layer3(x))
+        x = relu(self.input(x))
+        x = relu(self.hidden1(x))
+        x = relu(self.hidden2(x))
 
-        return self.layer4(x)
+        return self.output(x)
 
 
 class DigitClassificationModel(Module):
@@ -132,8 +133,8 @@ class DigitClassificationModel(Module):
         super().__init__()
         input_size = 28 * 28
         output_size = 10
-        self.layer1 = Linear(input_size, 256)
-        self.layer2 = Linear(256, 64)
+        self.input = Linear(input_size, 256)
+        self.hidden = Linear(256, 64)
         self.output = Linear(64, output_size)
 
     def forward(self, x):
@@ -150,8 +151,8 @@ class DigitClassificationModel(Module):
             A node with shape (batch_size x 10) containing predicted scores
                 (also called logits)
         """
-        x = relu(self.layer1(x))
-        x = relu(self.layer2(x))
+        x = relu(self.input(x))
+        x = relu(self.hidden(x))
         x = self.output(x)
         return x
 
@@ -174,10 +175,11 @@ class LanguageIDModel(Module):
         self.num_chars = 47
         self.languages = ["English", "Spanish", "Finnish", "Dutch", "Polish"]
         super(LanguageIDModel, self).__init__()
-        "*** YOUR CODE HERE ***"
+        
+        self.input = Linear(self.num_chars, 128)
+        self.hidden = Linear(128, 128)
+        self.output = Linear(128, len(self.languages))
         # Initialize your model parameters here
-
-
 
     def forward(self, xs):
         """
@@ -208,8 +210,17 @@ class LanguageIDModel(Module):
             A node with shape (batch_size x 5) containing predicted scores
                 (also called logits)
         """
-        "*** YOUR CODE HERE ***"
 
+        c = relu(self.input(xs[0]))
+
+        for i in range(1, xs.shape[0]):
+            c = relu(
+                self.input(xs[i]) + self.hidden(c)
+            )
+
+        logits = self.output(c)
+
+        return logits
 
 
 def Convolve(input: tensor, weight: tensor):
@@ -228,14 +239,26 @@ def Convolve(input: tensor, weight: tensor):
     The method 'zeros((y_dim,x_dim))' may also be useful. It initializes a pytorch tensor with dimensions (y_dim, x_dim), with every value
     set to zero.
     """
-    input_tensor_dimensions = input.shape
-    weight_dimensions = weight.shape
-    Output_Tensor = tensor(())
-    "*** YOUR CODE HERE ***"
+    # input_tensor_dimensions = input.shape
+    # weight_dimensions = weight.shape
+    # Output_Tensor = tensor(())
+    
+    input_h, input_w = input.shape
+    weight_h, weight_w = weight.shape
 
-    "*** End Code ***"
-    return Output_Tensor
+    out_h = input_h - weight_h + 1
+    out_w = input_w - weight_w + 1
 
+    rows = []
+    for y in range(out_h):
+        cols = []
+        for x in range(out_w):
+            region = input[y:y+weight_h, x:x+weight_w]
+            value = (region * weight).sum()
+            cols.append(value)
+        rows.append(stack(cols))
+
+    return stack(rows)
 
 class DigitConvolutionalModel(Module):
     """
@@ -255,7 +278,10 @@ class DigitConvolutionalModel(Module):
         output_size = 10
 
         self.convolution_weights = Parameter(ones((3, 3)))
-        """ YOUR CODE HERE """
+        
+        self.input = Linear(26*26, 128)
+        self.hidden = Linear(128, 64)
+        self.output = Linear(64, output_size)
 
 
     def forward(self, x):
@@ -268,7 +294,11 @@ class DigitConvolutionalModel(Module):
             list(map(lambda sample: Convolve(sample, self.convolution_weights), x))
         )
         x = x.flatten(start_dim=1)
-        """ YOUR CODE HERE """
+        
+        x = relu(self.input(x))
+        x = relu(self.hidden(x))
+      
+        return self.output(x)
 
 
 class Attention(Module):
@@ -307,5 +337,22 @@ class Attention(Module):
         """
         B, T, C = input.size()
 
-        """YOUR CODE HERE"""
+        Q = self.q_layer(input)
+        K = self.k_layer(input)
+        V = self.v_layer(input)
+
+        K_t = movedim(K, 1, 2)
+
+        attention = matmul(Q, K_t) / sqrt(self.layer_size)
+
+        attention = attention.masked_fill(
+            self.mask[:, :, :T, :T] == 0,
+            float('-inf')
+        )[0]
+
+        attention = softmax(attention, dim=-1)
+
+        output = matmul(attention, V)
+
+        return output
 

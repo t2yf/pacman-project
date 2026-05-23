@@ -127,12 +127,52 @@ def train_languageid(model, dataset):
     For more information, look at the pytorch documentation of torch.movedim()
     """
     model.train()
-    "*** YOUR CODE HERE ***"
+    epochs = 20
+    dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+    optimizer = optim.Adam(model.parameters(), lr = 0.01)
 
+    for epoch in range(epochs):
+        for batch in dataloader:
+            xs = batch['x']
+            y = batch['label']
+
+            xs = movedim(xs, 0, 1)
+
+            optimizer.zero_grad()
+            pred = model(xs)
+
+            loss = languageid_loss(pred, y)
+            loss.backward()
+
+            optimizer.step()
+        
 
 
 def Train_DigitConvolution(model, dataset):
     """
     Trains the model.
     """
-    """ YOUR CODE HERE """
+    model.train()
+    epochs = 20
+    dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
+    optimizer = optim.Adam(model.parameters(), lr = 0.01)
+
+    for epoch in range(epochs):
+
+        for batch in dataloader:
+
+            x = batch['x']
+            y = batch['label']
+
+            optimizer.zero_grad()
+
+            pred = model(x)
+
+            loss = digitconvolution_Loss(pred, y)
+
+            loss.backward()
+
+            optimizer.step()
+
+        if dataset.get_validation_accuracy() > 0.80:
+            break
