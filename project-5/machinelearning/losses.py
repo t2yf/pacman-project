@@ -1,4 +1,5 @@
 from torch.nn.functional import mse_loss, cross_entropy
+import torch
 
 def regression_loss(y_pred, y):
     """
@@ -61,6 +62,7 @@ def digitconvolution_Loss(y_pred, y):
         y: a node with shape (batch_size x 10)
     Returns: a loss tensor
     """
-    labels = y.argmax(dim=1)
-    return cross_entropy(y_pred, labels)
+    # labels = y.argmax(dim=1)
+    # return cross_entropy(y_pred, labels)
+    return torch.mean((y_pred - y) ** 2).reshape(1)
     

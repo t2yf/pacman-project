@@ -239,9 +239,6 @@ def Convolve(input: tensor, weight: tensor):
     The method 'zeros((y_dim,x_dim))' may also be useful. It initializes a pytorch tensor with dimensions (y_dim, x_dim), with every value
     set to zero.
     """
-    # input_tensor_dimensions = input.shape
-    # weight_dimensions = weight.shape
-    # Output_Tensor = tensor(())
     
     input_h, input_w = input.shape
     weight_h, weight_w = weight.shape
@@ -251,14 +248,13 @@ def Convolve(input: tensor, weight: tensor):
 
     rows = []
     for y in range(out_h):
-        cols = []
+        row_vals = []
         for x in range(out_w):
             region = input[y:y+weight_h, x:x+weight_w]
             value = (region * weight).sum()
-            cols.append(value)
-        rows.append(stack(cols))
-
-    return stack(rows)
+            row_vals.append(value)
+        rows.append(torch.stack(row_vals))  
+    return torch.stack(rows)
 
 class DigitConvolutionalModel(Module):
     """
@@ -290,14 +286,13 @@ class DigitConvolutionalModel(Module):
         a regular 1-dimensional datapoint now, similar to the previous questions.
         """
         x = x.reshape(len(x), 28, 28)
-        x = stack(
-            list(map(lambda sample: Convolve(sample, self.convolution_weights), x))
+        x = torch.stack(
+            [Convolve(sample, self.convolution_weights) for sample in x]
         )
         x = x.flatten(start_dim=1)
-        
+
         x = relu(self.input(x))
         x = relu(self.hidden(x))
-      
         return self.output(x)
 
 

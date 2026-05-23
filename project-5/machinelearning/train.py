@@ -153,9 +153,9 @@ def Train_DigitConvolution(model, dataset):
     Trains the model.
     """
     model.train()
-    epochs = 20
+    epochs = 200
     dataloader = DataLoader(dataset, batch_size=128, shuffle=True)
-    optimizer = optim.Adam(model.parameters(), lr = 0.01)
+    optimizer = optim.Adam(model.parameters(), lr = 0.001)
 
     for epoch in range(epochs):
 
